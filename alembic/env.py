@@ -1,6 +1,6 @@
 from logging.config import fileConfig
 from database import Base
-from models import ForkliftData
+from analyze.models import ForkliftData
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
