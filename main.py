@@ -3,6 +3,7 @@ from datetime import datetime
 from database import get_db
 from sqlalchemy.orm import Session
 
+from report.router import router as router_report
 from analyze.router import router as router_analyze
 from analyze.models import ForkliftData
 
@@ -12,6 +13,7 @@ import json
 app = FastAPI()
 
 app.include_router(router_analyze)
+app.include_router(router_report)
 
 @app.post("/import/")
 async def import_json(file: UploadFile = File(...), db: Session = Depends(get_db)):
