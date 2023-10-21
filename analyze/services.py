@@ -2,12 +2,19 @@ from datetime import datetime, timedelta, time
 from analyze.models import ForkliftData
 from collections import defaultdict
 from sqlalchemy.orm import Session
+from fastapi import HTTPException
 
 
 async def analyze_data(db: Session, start_point: str, end_point: str):
     time_differences = {}
 
-    data = db.query(ForkliftData).filter((ForkliftData.point == start_point) | (ForkliftData.point == end_point)).all()
+    try:
+        data = db.query(ForkliftData).filter((ForkliftData.point == start_point) | (ForkliftData.point == end_point)).all()
+    except Exception as db_error:
+        raise HTTPException(status_code=500, detail="Ошибка базы данных") from db_error
+
+    if not data:
+        raise HTTPException(status_code=400, detail="Неверные данные: start_point или end_point не были найдены")
 
     previous_entry = None
     
@@ -16,10 +23,8 @@ async def analyze_data(db: Session, start_point: str, end_point: str):
             current_time = entry.time
             time_difference = current_time - previous_entry.time
             
-            # Создание ключа для пары точек (например, "k1-k2")
             key = f"{previous_entry.point}-{entry.point}"
             
-            # Если ключ еще не существует в словаре, инициализируем его
             if key not in time_differences:
                 time_differences[key] = []
             
@@ -27,7 +32,6 @@ async def analyze_data(db: Session, start_point: str, end_point: str):
                 
         previous_entry = entry
 
-    # Среднее время (прогноз)
     results = {}
     for key, values in time_differences.items():
         if key == f"{start_point}-{end_point}":
@@ -38,8 +42,14 @@ async def analyze_data(db: Session, start_point: str, end_point: str):
 
 
 async def analyze_distance_by_date_range(db: Session, start_date: str, end_date: str):
-    data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date).all()
+    try:
+        data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date).all()
+    except Exception as db_error:
+        raise HTTPException(status_code=500, detail="Ошибка базы данных") from db_error
 
+    if not data:
+        raise HTTPException(status_code=404, detail="На заданную дату данные не найдены")
+    
     grouped_data = defaultdict(list)
     for entry in data:
         key = (entry.time.date(), entry.forklift)
@@ -59,7 +69,13 @@ async def analyze_distance_by_date_range(db: Session, start_date: str, end_date:
 
 
 async def analyze_orders_by_date_range(db: Session, start_date: str, end_date: str):
-    data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date).all()
+    try:
+        data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date).all()
+    except Exception as db_error:
+        raise HTTPException(status_code=500, detail="Ошибка базы данных") from db_error
+
+    if not data:
+        raise HTTPException(status_code=404, detail="На заданную дату данные не найдены")
 
     # Группировка данные по дате и погрузчику
     grouped_data = defaultdict(list)
@@ -82,7 +98,13 @@ async def analyze_orders_by_date_range(db: Session, start_date: str, end_date: s
 
 
 async def analyze_time_moving_by_date_range(db: Session, start_date: str, end_date: str):
-    data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date).all()
+    try:
+        data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date).all()
+    except Exception as db_error:
+        raise HTTPException(status_code=500, detail="Ошибка базы данных") from db_error
+
+    if not data:
+        raise HTTPException(status_code=404, detail="На заданную дату данные не найдены")
 
     grouped_data = defaultdict(list)
     for entry in data:
@@ -105,8 +127,14 @@ async def analyze_time_moving_by_date_range(db: Session, start_date: str, end_da
 
 
 async def analyze_time_idle_by_date_range(db: Session, start_date: str, end_date: str):
-    data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date).all()
+    try:
+        data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date).all()
+    except Exception as db_error:
+        raise HTTPException(status_code=500, detail="Ошибка базы данных") from db_error
 
+    if not data:
+        raise HTTPException(status_code=404, detail="На заданную дату данные не найдены")
+    
     grouped_data = defaultdict(list)
     for entry in data:
         key = (entry.time.date(), entry.forklift)
@@ -132,9 +160,14 @@ async def analyze_time_idle_by_date_range(db: Session, start_date: str, end_date
 
 
 async def analyze_time_in_status_by_forklift_and_date_range(db: Session, start_date: str, end_date: str):
-    # Получаем данные из базы для указанного периода
-    data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date).order_by(ForkliftData.forklift, ForkliftData.time).all()
+    try:
+        data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date).order_by(ForkliftData.forklift, ForkliftData.time).all()
+    except Exception as db_error:
+        raise HTTPException(status_code=500, detail="Ошибка базы данных") from db_error
 
+    if not data:
+        raise HTTPException(status_code=404, detail="На заданную дату данные не найдены")
+    
     time_in_status = defaultdict(lambda: defaultdict(lambda: timedelta(0)))
     previous_entries = {}
 
