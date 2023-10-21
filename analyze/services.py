@@ -5,16 +5,16 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
 
-async def analyze_data(db: Session, start_point: str, end_point: str):
+async def analyze_data(db: Session, start_point: str, end_point: str, warehouse: int):
     time_differences = {}
 
     try:
-        data = db.query(ForkliftData).filter((ForkliftData.point == start_point) | (ForkliftData.point == end_point)).all()
+        data = db.query(ForkliftData).filter((ForkliftData.point == start_point) | (ForkliftData.point == end_point), ForkliftData.warehouse == warehouse).all()
     except Exception as db_error:
         raise HTTPException(status_code=500, detail="Ошибка базы данных") from db_error
 
     if not data:
-        raise HTTPException(status_code=400, detail="Неверные данные: start_point или end_point не были найдены")
+        raise HTTPException(status_code=400, detail="Неверные данные: start_point, end_point или warehouse не были найдены")
 
     previous_entry = None
     
@@ -41,9 +41,9 @@ async def analyze_data(db: Session, start_point: str, end_point: str):
     return results
 
 
-async def analyze_distance_by_date_range(db: Session, start_date: str, end_date: str):
+async def analyze_distance_by_date_range(db: Session, start_date: str, end_date: str, warehouse: int):
     try:
-        data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date).all()
+        data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date, ForkliftData.warehouse == warehouse).all()
     except Exception as db_error:
         raise HTTPException(status_code=500, detail="Ошибка базы данных") from db_error
 
@@ -68,22 +68,20 @@ async def analyze_distance_by_date_range(db: Session, start_date: str, end_date:
     return result
 
 
-async def analyze_orders_by_date_range(db: Session, start_date: str, end_date: str):
+async def analyze_orders_by_date_range(db: Session, start_date: str, end_date: str, warehouse: int):
     try:
-        data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date).all()
+        data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date, ForkliftData.warehouse == warehouse).all()
     except Exception as db_error:
         raise HTTPException(status_code=500, detail="Ошибка базы данных") from db_error
 
     if not data:
         raise HTTPException(status_code=404, detail="На заданную дату данные не найдены")
 
-    # Группировка данные по дате и погрузчику
     grouped_data = defaultdict(list)
     for entry in data:
         key = (entry.time.date(), entry.forklift)
         grouped_data[key].append(entry)
 
-    # Анализ количества выполненных заказов по дням и погрузчику
     orders_by_day_and_forklift = defaultdict(int)
     for key, entries in grouped_data.items():
         for entry in entries:
@@ -97,9 +95,9 @@ async def analyze_orders_by_date_range(db: Session, start_date: str, end_date: s
     return result
 
 
-async def analyze_time_moving_by_date_range(db: Session, start_date: str, end_date: str):
+async def analyze_time_moving_by_date_range(db: Session, start_date: str, end_date: str, warehouse: int):
     try:
-        data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date).all()
+        data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date, ForkliftData.warehouse == warehouse).all()
     except Exception as db_error:
         raise HTTPException(status_code=500, detail="Ошибка базы данных") from db_error
 
@@ -126,9 +124,9 @@ async def analyze_time_moving_by_date_range(db: Session, start_date: str, end_da
     return result
 
 
-async def analyze_time_idle_by_date_range(db: Session, start_date: str, end_date: str):
+async def analyze_time_idle_by_date_range(db: Session, start_date: str, end_date: str, warehouse: int):
     try:
-        data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date).all()
+        data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date, ForkliftData.warehouse == warehouse).all()
     except Exception as db_error:
         raise HTTPException(status_code=500, detail="Ошибка базы данных") from db_error
 
@@ -159,9 +157,9 @@ async def analyze_time_idle_by_date_range(db: Session, start_date: str, end_date
     return result
 
 
-async def analyze_time_in_status_by_forklift_and_date_range(db: Session, start_date: str, end_date: str):
+async def analyze_time_in_status_by_forklift_and_date_range(db: Session, start_date: str, end_date: str, warehouse: int):
     try:
-        data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date).order_by(ForkliftData.forklift, ForkliftData.time).all()
+        data = db.query(ForkliftData).filter(ForkliftData.time >= start_date, ForkliftData.time <= end_date, ForkliftData.warehouse == warehouse).order_by(ForkliftData.forklift, ForkliftData.time).all()
     except Exception as db_error:
         raise HTTPException(status_code=500, detail="Ошибка базы данных") from db_error
 

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -14,23 +14,23 @@ router = APIRouter(
 )
 
 @router.get("/point_passes/")
-async def point_passes_count_endpoint(db: Session = Depends(get_db)):
-    return await point_passes_count(db)
+async def point_passes_count_endpoint(db: Session = Depends(get_db), warehouse: int = Query(..., description="Номер склада")):
+    return await point_passes_count(db, warehouse)
 
 
 @router.get("/point_passes_by_forklift/")
-async def point_passes_count_by_forklift_endpoint(forklift_id: int, db: Session = Depends(get_db)):    
-    return await point_passes_count_by_forklift(db, forklift_id)
+async def point_passes_count_by_forklift_endpoint(forklift_id: int, db: Session = Depends(get_db), warehouse: int = Query(..., description="Номер склада")):    
+    return await point_passes_count_by_forklift(db, forklift_id, warehouse)
 
 
 @router.get("/broken_points/")
-async def broken_points_alert_endpoint(db: Session = Depends(get_db)):
-    return await broken_points_alert(db)
+async def broken_points_alert_endpoint(db: Session = Depends(get_db), warehouse: int = Query(..., description="Номер склада")):
+    return await broken_points_alert(db, warehouse)
     
 
 @router.get("/aggregate_forklift_data/")
-async def aggregate_forklift_data_endpoint(db: Session = Depends(get_db)):
-    return await aggregate_forklift_data(db)
+async def aggregate_forklift_data_endpoint(db: Session = Depends(get_db), warehouse: int = Query(..., description="Номер склада")):
+    return await aggregate_forklift_data(db, warehouse)
 
 
 @router.get("/order_info/{order_id}/")
