@@ -36,7 +36,7 @@ async def analyze_data(db: Session, start_point: str, end_point: str, warehouse:
     for key, values in time_differences.items():
         if key == f"{start_point}-{end_point}":
             average_time = sum(values, timedelta()).total_seconds() / len(values)
-            results[key] = f"{average_time:.2f} секунд"
+            results[key] = f"Погрузчик проедет данное расстояние ~ {average_time:.2f} секунд"
     
     return results
 
